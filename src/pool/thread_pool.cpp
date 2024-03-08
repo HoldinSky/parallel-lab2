@@ -104,7 +104,7 @@ bool ThreadPool::get_task_from_queue(PoolQueue *queue, std::shared_ptr<ThreadTas
         this->telemetry.update_wait_time(millis_passed);
     }
 
-    this->telemetry.update_queue_size(this->young_generation_tasks.size() + this->old_generation_tasks.size());
+    this->telemetry.update_main_queue_size(this->young_generation_tasks.size() + this->old_generation_tasks.size());
 
     if (out_task)
         out_task->is_in_progress = true;
@@ -128,6 +128,14 @@ void ThreadPool::thread_routine(uint32_t thread_id, bool is_young) {
         this->check_pause();
 
         {
+            read_lock _(this->common_lock);
+            if (is_young)
+                this->telemetry.update_main_queue_size(queue->size());
+            else
+                this->telemetry.update_secondary_queue_size(queue->size());
+        }
+
+        {
             write_lock _(stdout_lock);
             std::cout << terminal.yellow << "Thread {" << thread_id << "}. Task {" << task->id << "} - Start\n"
                       << terminal.reset;
@@ -144,7 +152,7 @@ void ThreadPool::thread_routine(uint32_t thread_id, bool is_young) {
                       << terminal.reset;
         }
 
-        this->telemetry.task_completed();
+        this->telemetry.task_completed(task_execution_time.count());
     }
 }
 

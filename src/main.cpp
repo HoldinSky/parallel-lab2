@@ -3,6 +3,15 @@
 
 #ifdef LAB2_TASK_MANAGER_H
 
+void print_telemetry(const Telemetry &tel) {
+    printf("Total time asleep: %ld ms\n", tel.get_total_sleep_time());
+    printf("Average main queue size: %.2f\n", tel.get_avg_main_queue_size());
+    printf("Average secondary queue size: %.2f\n", tel.get_avg_secondary_queue_size());
+    printf("Tasks scheduled: %d\n", tel.get_scheduled_tasks());
+    printf("Tasks completed: %d\n", tel.get_completed_tasks());
+    printf("Average task execution time: %.2f ms\n", tel.get_avg_task_execution_time());
+}
+
 void application_automated() {
     Telemetry telemetry{};
 
@@ -20,10 +29,7 @@ void application_automated() {
     t.join();
 
     std::cout << std::endl;
-    printf("Total time asleep: %d ms\n", telemetry.get_total_sleep_time());
-    printf("Average queues cumulative size: %.2f\n", telemetry.get_avg_queue_size());
-    printf("Tasks scheduled: %d\n", telemetry.get_scheduled_tasks());
-    printf("Tasks completed: %d\n", telemetry.get_completed_tasks());
+    print_telemetry(telemetry);
 }
 
 void print_menu() {
@@ -95,10 +101,7 @@ void process_menu_option(int32_t option, TaskManager *manager) {
         case menu.print_telemetry: {
             auto telemetry = manager->get_telemetry();
 
-            printf("Total time asleep: %d ms\n", telemetry.get_total_sleep_time());
-            printf("Average queues size: %.2f\n", telemetry.get_avg_queue_size());
-            printf("Tasks scheduled: %d\n", telemetry.get_scheduled_tasks());
-            printf("Tasks completed: %d\n", telemetry.get_completed_tasks());
+            print_telemetry(telemetry);
             return;
         }
         default:

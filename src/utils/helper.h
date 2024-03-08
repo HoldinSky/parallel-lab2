@@ -70,10 +70,14 @@ struct ThreadTask {
 class Telemetry {
 private:
 
-    uint32_t total_sleep_time = 0;
+    uint64_t total_sleep_time = 0;
+    uint64_t total_execution_time = 0;
 
-    uint32_t cumulative_queue_size = 0;
-    uint32_t queue_size_measurements = 0;
+    uint32_t main_queue_size = 0;
+    uint32_t main_queue_size_measurements = 0;
+
+    uint32_t secondary_queue_size = 0;
+    uint32_t secondary_queue_size_measurements = 0;
 
     uint32_t tasks_completed = 0;
     uint32_t tasks_scheduled = 0;
@@ -85,9 +89,10 @@ public:
         this->tasks_scheduled++;
     }
 
-    void task_completed() {
+    void task_completed(uint64_t execution_time_ms) {
         write_lock _(telemetry_lock);
         this->tasks_completed++;
+        this->total_execution_time += execution_time_ms;
     }
 
     void update_wait_time(std::chrono::milliseconds millis_waited) {
@@ -95,21 +100,33 @@ public:
         this->total_sleep_time += millis_waited.count();
     }
 
-    void update_queue_size(uint32_t current_queue_size) {
+    void update_main_queue_size(uint32_t current_queue_size) {
         write_lock _(telemetry_lock);
 
-        queue_size_measurements++;
-        this->cumulative_queue_size += current_queue_size;
+        this->main_queue_size_measurements++;
+        this->main_queue_size += current_queue_size;
     }
 
-    [[nodiscard]] uint32_t get_total_sleep_time() const {
+    void update_secondary_queue_size(uint32_t current_queue_size) {
+        write_lock _(telemetry_lock);
+
+        this->secondary_queue_size_measurements++;
+        this->secondary_queue_size += current_queue_size;
+    }
+
+    [[nodiscard]] uint64_t get_total_sleep_time() const {
         read_lock _(telemetry_lock);
         return this->total_sleep_time;
     }
 
-    [[nodiscard]] double get_avg_queue_size() const {
+    [[nodiscard]] double get_avg_main_queue_size() const {
         read_lock _(telemetry_lock);
-        return (double)this->cumulative_queue_size / this->queue_size_measurements;
+        return (double) this->main_queue_size / this->main_queue_size_measurements;
+    }
+
+    [[nodiscard]] double get_avg_secondary_queue_size() const {
+        read_lock _(telemetry_lock);
+        return (double) this->secondary_queue_size / this->secondary_queue_size_measurements;
     }
 
     [[nodiscard]] uint32_t get_scheduled_tasks() const {
@@ -120,6 +137,11 @@ public:
     [[nodiscard]] uint32_t get_completed_tasks() const {
         read_lock _(telemetry_lock);
         return this->tasks_completed;
+    }
+
+    [[nodiscard]] double get_avg_task_execution_time() const {
+        read_lock _(telemetry_lock);
+        return (double) this->total_execution_time / this->tasks_completed;
     }
 };
 
