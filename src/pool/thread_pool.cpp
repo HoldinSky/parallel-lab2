@@ -83,10 +83,10 @@ bool ThreadPool::get_task_from_queue(PoolQueue *queue, std::shared_ptr<ThreadTas
             // if this task is in the queue but marked as IN_PROGRESS
         } while (task_obtained && out_task->is_in_progress);
 
-        bool work_straight_away = this->terminated || task_obtained || this->is_last_wish;
-        fell_to_sleep = !work_straight_away;
+        bool continue_straight_away = this->terminated || task_obtained || this->is_last_wish;
+        fell_to_sleep = !continue_straight_away;
 
-        return work_straight_away;
+        return continue_straight_away;
     };
 
     auto millis_passed = measure_execution_time([&]() {

@@ -12,7 +12,7 @@ void print_telemetry(const Telemetry &tel) {
     printf("Average task execution time: %.2f ms\n", tel.get_avg_task_execution_time());
 }
 
-void application_automated() {
+void application_automated(bool finish_gracefully = true) {
     Telemetry telemetry{};
 
     std::thread t([&]() {
@@ -21,7 +21,7 @@ void application_automated() {
 
         std::this_thread::sleep_for(std::chrono::seconds(60));
 
-        taskManager.terminate();
+        taskManager.terminate(finish_gracefully);
 
         telemetry = taskManager.get_telemetry();
     });
