@@ -104,6 +104,9 @@ void process_menu_option(int32_t option, TaskManager *manager) {
             print_telemetry(telemetry);
             return;
         }
+        case menu.exit: {
+            manager->terminate();
+        }
         default:
             return;
     }
